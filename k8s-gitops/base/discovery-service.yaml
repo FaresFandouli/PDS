@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-service
+  namespace: pds
+  labels:
+    app: discovery-service
+    app.kubernetes.io/name: discovery-service
+    app.kubernetes.io/part-of: pds-ehealth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery-service
+  template:
+    metadata:
+      labels:
+        app: discovery-service
+    spec:
+      containers:
+        - name: discovery-service
+          image: ${DOCKERHUB_USERNAME}/pds-discovery-service:1.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8761
+              name: http
+          envFrom:
+            - configMapRef:
+                name: pds-config
+          env:
+            - name: EUREKA_CLIENT_REGISTER_WITH_EUREKA
+              value: "false"
+            - name: EUREKA_CLIENT_FETCH_REGISTRY
+              value: "false"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      imagePullSecrets:
+        - name: docker-registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-service
+  namespace: pds
+  labels:
+    app: discovery-service
+spec:
+  selector:
+    app: discovery-service
+  ports:
+    - port: 8761
+      targetPort: 8761
+      name: http
+  type: ClusterIP

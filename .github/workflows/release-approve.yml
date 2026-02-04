@@ -1,0 +1,132 @@
+name: Release Approve - Promote RC to Stable
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+
+env:
+  DOCKER_IMAGE_PREFIX: ${{ secrets.DOCKERHUB_USERNAME }}/pds
+
+jobs:
+  promote-release:
+    name: Promote Release Candidate to Stable
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    strategy:
+      matrix:
+        service:
+          - config-service
+          - discovery-service
+          - gateway-service
+          - auth-service
+          - clinic-service
+          - medical-service
+          - consultation-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull RC Image
+        run: |
+          docker pull ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:1.0.0-RC1
+
+      - name: Retag RC to Stable Release
+        run: |
+          docker tag ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:1.0.0-RC1 \
+                     ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:1.0.0
+          docker tag ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:1.0.0-RC1 \
+                     ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:latest
+
+      - name: Push Stable Release Images
+        run: |
+          docker push ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:1.0.0
+          docker push ${{ env.DOCKER_IMAGE_PREFIX }}-${{ matrix.service }}:latest
+
+  create-git-tag:
+    name: Create Git Release Tag
+    runs-on: ubuntu-latest
+    needs: promote-release
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Create and Push Git Tag
+        run: |
+          git tag -a v1.0.0 -m "Release v1.0.0 - Stable production release"
+          git push origin v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.0
+          name: Release v1.0.0
+          body: |
+            ## PDS E-Health Management System - Release v1.0.0
+
+            ### Services Included:
+            - Config Service
+            - Discovery Service (Eureka)
+            - Gateway Service
+            - Auth Service
+            - Clinic Service
+            - Medical Service
+            - Consultation Service
+
+            ### Docker Images:
+            All services are available on Docker Hub with tag `1.0.0`
+
+            ### Deployment:
+            Use the Kubernetes manifests in the `k8s-gitops` repository for deployment.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-release:
+    name: Notify Release Complete
+    runs-on: ubuntu-latest
+    needs: [promote-release, create-git-tag]
+    if: always() && github.event.pull_request.merged == true
+
+    steps:
+      - name: Release Summary
+        run: |
+          echo "=========================================="
+          echo "Release v1.0.0 Promotion Complete!"
+          echo "=========================================="
+          echo ""
+          echo "Docker Images promoted from 1.0.0-RC1 to 1.0.0:"
+          echo "  - config-service:1.0.0"
+          echo "  - discovery-service:1.0.0"
+          echo "  - gateway-service:1.0.0"
+          echo "  - auth-service:1.0.0"
+          echo "  - clinic-service:1.0.0"
+          echo "  - medical-service:1.0.0"
+          echo "  - consultation-service:1.0.0"
+          echo ""
+          echo "Git Tag: v1.0.0"
+          echo "=========================================="
