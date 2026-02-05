@@ -7,8 +7,8 @@ A complete microservices-based E-Health management system built with Spring Boot
 ### Backend Microservices
 - **Config Service** (Port 8888): Centralized configuration management
 - **Discovery Service** (Port 8761): Service discovery with Eureka
-- **Gateway Service** (Port 8081): API Gateway with routing and load balancing
-- **Auth Service** (Port 8082): Authentication and user management
+- **Gateway** (Port 8081): API Gateway with routing and load balancing
+- **Auth Service** (Port 8090): Authentication and user management
 - **Clinic Service** (Port 8083): Patient and appointment management
 - **Medical Service** (Port 8084): Medical records and prescriptions
 - **Consultation Service** (Port 8085): Consultation management

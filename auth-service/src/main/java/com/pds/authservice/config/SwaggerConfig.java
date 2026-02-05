@@ -16,33 +16,32 @@ import java.util.List;
 @Configuration
 public class SwaggerConfig {
 
-    @Bean
-    public OpenAPI authServiceAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("🔐 Auth Service API - MedInsight")
-                        .description("API de gestion de l'authentification, des utilisateurs et des autorisations")
-                        .version("1.0.0")
-                        .contact(new Contact()
-                                .name("MedInsight Team")
-                                .email("support@medinsight.com"))
-                        .license(new License()
-                                .name("Apache 2.0")
-                                .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
-                .servers(List.of(
-                        new Server()
-                                .url("http://localhost:8081/api/auth")
-                                .description("Via Gateway (Recommandé)"),
-                        new Server()
-                                .url("http://localhost:8082/api/auth")
-                                .description("Direct - Auth Service")
-                ))
-                .components(new Components()
-                        .addSecuritySchemes("bearer-jwt", new SecurityScheme()
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .description("Entrez votre token JWT (sans 'Bearer')")))
-                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
-    }
+        @Bean
+        public OpenAPI authServiceAPI() {
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title("🔐 Auth Service API - MedInsight")
+                                                .description("API de gestion de l'authentification, des utilisateurs et des autorisations")
+                                                .version("1.0.0")
+                                                .contact(new Contact()
+                                                                .name("MedInsight Team")
+                                                                .email("support@medinsight.com"))
+                                                .license(new License()
+                                                                .name("Apache 2.0")
+                                                                .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
+                                .servers(List.of(
+                                                new Server()
+                                                                .url("http://localhost:8081")
+                                                                .description("Via Gateway (Recommandé)"),
+                                                new Server()
+                                                                .url("http://localhost:8082/api/auth")
+                                                                .description("Direct - Auth Service")))
+                                .components(new Components()
+                                                .addSecuritySchemes("bearer-jwt", new SecurityScheme()
+                                                                .type(SecurityScheme.Type.HTTP)
+                                                                .scheme("bearer")
+                                                                .bearerFormat("JWT")
+                                                                .description("Entrez votre token JWT (sans 'Bearer')")))
+                                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
+        }
 }

@@ -25,7 +25,7 @@ $services = @(
     @{Name="config-service"; Port=8888; Wait=30},
     @{Name="discovery-service"; Port=8761; Wait=30},
     @{Name="gateway-service"; Port=8081; Wait=30},
-    @{Name="auth-service"; Port=8082; Wait=15},
+    @{Name="auth-service"; Port=8090; Wait=15},
     @{Name="clinic-service"; Port=8083; Wait=15},
     @{Name="medical-service"; Port=8084; Wait=15},
     @{Name="consultation-service"; Port=8085; Wait=15}

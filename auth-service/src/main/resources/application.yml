@@ -50,7 +50,7 @@ eureka:
     lease-expiration-duration-in-seconds: 30
 
 server:
-  port: 8082
+  port: 8090
   servlet:
     context-path: /
 
@@ -70,6 +70,8 @@ app:
     from: ${MAIL_FROM:noreply@pds-health.com}
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
+  gateway:
+    url: http://localhost:8081
 
 springdoc:
   swagger-ui:
