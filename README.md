@@ -1,75 +1,52 @@
-# PDS - E-Health Management System
+# PDS - Plateforme de Santé (Health Platform)
 
-A complete microservices-based E-Health management system built with Spring Boot and React.
+A microservices-based health platform built with Spring Boot and React using JWT authentication.
 
 ## 🏗️ Architecture
 
 ### Backend Microservices
-- **Config Service** (Port 8888): Centralized configuration management
-- **Discovery Service** (Port 8761): Service discovery with Eureka
-- **Gateway Service** (Port 8081): API Gateway with routing and load balancing
-- **Auth Service** (Port 8082): Authentication and user management
-- **Clinic Service** (Port 8083): Patient and appointment management
-- **Medical Service** (Port 8084): Medical records and prescriptions
-- **Consultation Service** (Port 8085): Consultation management
+- **Eureka Service** (Port 8761): Service discovery
+- **Gateway Service** (Port 8982): API Gateway with routing
+- **Auth Service** (Port 8082): Authentication and user management with JWT
 
 ### Frontend
-- **React Application** (Port 3000): Modern, responsive UI with Tailwind CSS
+- **React Application** (Port 5173): Modern, responsive UI with Tailwind CSS
 
 ### Infrastructure
-- **Keycloak** (Port 8080): Identity and access management
 - **MySQL** (Port 3306): Database
-- **Redis** (Port 6379): Caching
-- **Kafka** (Port 9092): Message broker
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker & Docker Compose
-- Java 17+ (for local development)
-- Node.js 18+ (for frontend development)
+- Java 17+
+- Node.js 18+
+- MySQL 8.0+
 - Maven 3.8+
 
-### 1. Start Infrastructure Services
+### Backend Setup
 
+1. **Start Eureka Discovery Service** (Terminal 1)
 ```bash
-# Start Keycloak, MySQL, Redis, Kafka
-docker-compose up -d keycloak mysql redis kafka zookeeper
+cd eureka-service
+mvn spring-boot:run
 ```
 
-### 2. Configure Keycloak
-
-1. Access Keycloak admin console: http://localhost:8080
-2. Login with `admin/admin`
-3. Create a new realm: `pds-realm`
-4. Create a client: `pds-client`
-   - Client Protocol: openid-connect
-   - Access Type: confidential
-   - Valid Redirect URIs: `http://localhost:3000/*`
-   - Web Origins: `http://localhost:3000`
-5. Create roles: `ADMIN`, `DOCTOR`, `PATIENT`, `SECRETARY`, `SECURITY_OFFICER`
-6. Create test users and assign roles
-
-### 3. Start Microservices
-
-**Option A: Using Docker Compose (Recommended)**
+2. **Configure Auth Service** (Terminal 2)
 ```bash
-docker-compose up -d
+cd auth-service
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your settings
+mvn spring-boot:run
 ```
 
-**Option B: Local Development**
+3. **Start Gateway Service** (Terminal 3)
 ```bash
-# Start services in order
-cd config-service && ./mvnw spring-boot:run &
-cd discovery-service && ./mvnw spring-boot:run &
-cd gateway-service && ./mvnw spring-boot:run &
-cd auth-service && ./mvnw spring-boot:run &
-cd clinic-service && ./mvnw spring-boot:run &
-cd medical-service && ./mvnw spring-boot:run &
-cd consultation-service && ./mvnw spring-boot:run &
+cd gateway-service
+mvn spring-boot:run
 ```
 
-### 4. Start Frontend
+### Frontend Setup
 
 ```bash
 cd pds-frontend
@@ -77,230 +54,211 @@ npm install
 npm run dev
 ```
 
-## 📱 Access the Application
+## 📱 Access Points
 
-- **Frontend**: http://localhost:3000
-- **API Gateway**: http://localhost:8081
+- **Frontend**: http://localhost:5173
+- **API Gateway**: http://localhost:8982
+- **Auth Service Swagger**: http://localhost:8082/swagger-ui.html
 - **Eureka Dashboard**: http://localhost:8761
-- **Keycloak Admin**: http://localhost:8080
 
-## 🔐 Default Credentials
+## 🔐 Authentication
 
-Configure these in Keycloak:
+### JWT Configuration
 
-- **Admin**: admin@pds.com / admin123
-- **Doctor**: doctor@pds.com / doctor123
-- **Patient**: patient@pds.com / patient123
+The system uses JWT (HS256) with:
+- **Access Token**: 24 hours expiration
+- **Refresh Token**: 7 days expiration
 
-## 📊 API Endpoints
-
-### Auth Service
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/profile` - Get user profile
-
-### Clinic Service
-- `GET /api/clinic/patients` - Get all patients
-- `POST /api/clinic/patients` - Create patient
-- `GET /api/clinic/patients/{id}` - Get patient by ID
-- `PUT /api/clinic/patients/{id}` - Update patient
-- `DELETE /api/clinic/patients/{id}` - Delete patient
-- `GET /api/clinic/appointments` - Get all appointments
-- `POST /api/clinic/appointments` - Create appointment
-
-### Medical Service
-- `GET /api/medical/records` - Get medical records
-- `POST /api/medical/records` - Create medical record
-- `GET /api/medical/prescriptions` - Get prescriptions
-- `POST /api/medical/prescriptions` - Create prescription
-
-### Consultation Service
-- `GET /api/consultation/consultations` - Get consultations
-- `POST /api/consultation/consultations` - Create consultation
-
-## 🛠️ Development
-
-### Building Services
-
-```bash
-# Build all services
-./build-all.sh
-
-# Build specific service
-cd [service-name]
-./mvnw clean package
+Configure in `auth-service/.env`:
+```
+JWT_SECRET=your-256-bit-secret-key-minimum-64-characters
+JWT_EXPIRATION=86400000
+JWT_REFRESH_EXPIRATION=604800000
 ```
 
-### Running Tests
+### API Endpoints
 
-```bash
-# Run tests for all services
-./test-all.sh
+**Public Endpoints:**
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/refresh` - Refresh JWT token
+- `POST /api/auth/verify-email` - Verify email
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password
 
-# Run tests for specific service
-cd [service-name]
-./mvnw test
-```
+**Protected Endpoints:**
+- `GET /api/auth/profile` - Get current user profile
+- `POST /api/auth/logout` - Logout user
 
-### Database Migrations
+## 📝 Environment Configuration
 
-Databases are automatically created and initialized on first run.
-
-## 📦 Project Structure
-
-```
-pds-complete-project/
-├── config-service/           # Configuration server
-├── discovery-service/        # Eureka server
-├── gateway-service/          # API Gateway
-├── auth-service/             # Authentication
-├── clinic-service/           # Patient & appointments
-├── medical-service/          # Medical records
-├── consultation-service/     # Consultations
-├── pds-frontend/             # React application
-├── docker-compose.yml        # Docker orchestration
-├── init-db.sql              # Database initialization
-└── README.md                # This file
-```
-
-## 🔒 Security
-
-- JWT-based authentication via Keycloak
-- Role-based access control (RBAC)
-- OAuth2 Resource Server protection
-- CORS configuration for frontend
-- Secure password storage
-
-## 🌐 Technologies
-
-### Backend
-- Spring Boot 3.2.0
-- Spring Cloud 2023.0.0
-- Spring Security with OAuth2
-- MySQL 8.0
-- Redis
-- Apache Kafka
-- Keycloak 23.0
-
-### Frontend
-- React 18
-- Vite
-- Tailwind CSS
-- React Router v6
-- React Query
-- Axios
-- Keycloak JS Adapter
-
-## 📝 Environment Variables
-
-Create `.env` file in root:
+### Auth Service (.env)
 
 ```env
 # Database
-MYSQL_ROOT_PASSWORD=rootpassword
-MYSQL_DATABASE=pds_db
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=root
 
-# Keycloak
-KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
+# Mail
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-specific-password
+MAIL_FROM=noreply@pds-health.com
 
-# Services
-CONFIG_SERVER_PORT=8888
-EUREKA_SERVER_PORT=8761
-GATEWAY_PORT=8081
+# JWT
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRATION=86400000
+JWT_REFRESH_EXPIRATION=604800000
+
+# Frontend
+FRONTEND_URL=http://localhost:5173
+```
+
+### Frontend (.env)
+
+```env
+VITE_API_BASE_URL=http://localhost:8982/api
+VITE_ENV=development
 ```
 
 ## 🧪 Testing
 
-### Testing with Postman
-
-Import the Postman collection from `postman/PDS-API.postman_collection.json`
-
-1. Get Keycloak access token
-2. Add token to Authorization header
-3. Test endpoints
-
-### Integration Tests
-
+### Register User
 ```bash
-cd [service-name]
-./mvnw verify
+curl -X POST http://localhost:8982/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "securepass123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "PATIENT"
+  }'
 ```
 
-## 🚀 Deployment
-
-### Docker Production Build
-
+### Login
 ```bash
-# Build all images
-docker-compose build
-
-# Push to registry
-docker-compose push
-
-# Deploy
-docker-compose up -d
+curl -X POST http://localhost:8982/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "securepass123"
+  }'
 ```
 
-### Kubernetes Deployment
+## 🔧 Database Setup
 
-```bash
-# Apply configurations
-kubectl apply -f k8s/
+MySQL automatically creates the database on first run. To manually create:
 
-# Check status
-kubectl get pods
+```sql
+CREATE DATABASE IF NOT EXISTS pds_auth;
+USE pds_auth;
 ```
 
-## 📊 Monitoring
+## 📧 Email Configuration (Gmail)
 
-- Spring Boot Actuator endpoints: `/actuator`
-- Eureka Dashboard: http://localhost:8761
-- Application metrics available at `/actuator/metrics`
+1. Enable 2-Factor Authentication on your Gmail account
+2. Generate an app-specific password: https://myaccount.google.com/apppasswords
+3. Update `MAIL_USERNAME` and `MAIL_PASSWORD` in `auth-service/.env`
 
-## 🤝 Contributing
+## 🚨 Troubleshooting
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Port Already in Use
 
-## 📄 License
+```bash
+# Kill process on port 8082
+lsof -ti:8082 | xargs kill -9
 
-This project is licensed under the MIT License.
+# Kill process on port 8982
+lsof -ti:8982 | xargs kill -9
+```
 
-## 👥 Team
+### Database Connection Error
+- Ensure MySQL is running
+- Verify credentials in `auth-service/.env`
+- Check database exists: `mysql -u root -p -e "SHOW DATABASES;"`
 
-- Developer: [Your Name]
-- Project: PDS E-Health Management System
-- Year: 2024
+### Frontend Cannot Connect
+- Verify Gateway Service is running on port 8982
+- Check `VITE_API_BASE_URL` in `pds-frontend/.env`
+- Verify CORS is enabled in `auth-service/SecurityConfig.java`
 
-## 📞 Support
+### Email Not Sending
+- Verify Gmail credentials and app-specific password
+- Check 2FA is enabled on Gmail
+- Review logs: Check Spring Mail configuration
 
-For issues and questions:
-- Create an issue on GitHub
-- Email: support@pds-health.com
+## 📊 Project Structure
 
-## 🗺️ Roadmap
+```
+pds/
+├── eureka-service/           # Service discovery (Eureka Server)
+├── auth-service/             # Authentication microservice
+│   ├── src/main/java/...     # Java source code
+│   ├── src/main/resources/
+│   │   └── application.yml   # Configuration (uses environment variables)
+│   └── .env.example          # Environment variables template
+├── gateway-service/          # API Gateway
+├── pds-frontend/             # React frontend
+│   ├── src/                  # React components and pages
+│   ├── package.json          # Dependencies
+│   ├── vite.config.js        # Vite configuration
+│   └── .env.example          # Environment variables template
+└── README.md                 # This file
+```
 
-- [ ] Add real-time notifications
-- [ ] Implement WebSocket for chat
-- [ ] Add mobile application
-- [ ] Integrate ML for diagnosis assistance
-- [ ] Add multi-language support
-- [ ] Implement advanced analytics dashboard
+## 🔒 Security Notes
 
-## ⚠️ Important Notes
+⚠️ **Development Only Configuration**
 
-1. Change all default passwords in production
-2. Configure HTTPS for all services
-3. Set up proper backup strategies
-4. Configure monitoring and alerting
-5. Review and update security policies regularly
+Before production deployment:
+
+1. Store JWT secret in secure vault (HashiCorp Vault, AWS Secrets Manager, etc.)
+2. Use environment-specific configurations
+3. Enable HTTPS/TLS for all services
+4. Implement token blacklisting for logout
+5. Use production-grade email service (SendGrid, AWS SES, etc.)
+6. Add rate limiting and DDoS protection
+7. Implement comprehensive request validation
+8. Set up audit logging
+9. Enable CORS only for trusted domains
+10. Use strong, randomly generated JWT secrets (minimum 64 characters)
+
+## 🎯 Development Workflow
+
+```bash
+# Create feature branch
+git checkout -b feature/your-feature
+
+# Make changes and test locally
+# Commit changes
+git add .
+git commit -m "Add your feature description"
+
+# Push to remote
+git push origin feature/your-feature
+```
+
+## 📚 Additional Resources
+
+- Spring Boot Documentation: https://spring.io/projects/spring-boot
+- React Documentation: https://react.dev
+- JWT Guide: https://jwt.io
+- Vite Documentation: https://vitejs.dev
+
+## 💡 Tips
+
+- Use Swagger UI to test API endpoints: http://localhost:8082/swagger-ui.html
+- Monitor service status via Eureka: http://localhost:8761
+- Check application logs for debugging issues
+- Use Postman or Insomnia for API testing
 
 ---
 
+**Built for Healthcare Professionals**
 **Built with ❤️ for Healthcare Professionals**
 " " 
 "# Test" 

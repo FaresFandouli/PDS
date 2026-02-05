@@ -1,34 +1,4 @@
 services:
-  keycloak-db:
-    image: postgres:15-alpine
-    container_name: pds-keycloak-db
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: keycloak
-    volumes:
-      - keycloak_data:/var/lib/postgresql/data
-    networks:
-      - pds-network
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.0
-    container_name: pds-keycloak
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: keycloak
-    ports:
-      - "8080:8080"
-    command: start-dev
-    depends_on:
-      - keycloak-db
-    networks:
-      - pds-network
-
   mysql:
     image: mysql:8.0
     container_name: pds-mysql
@@ -78,7 +48,6 @@ services:
       - pds-network
 
 volumes:
-  keycloak_data:
   mysql_data:
 
 networks:

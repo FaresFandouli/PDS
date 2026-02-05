@@ -1,0 +1,49 @@
+# Shared configuration for all microservices
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/pds-realm
+          jwk-set-uri: http://keycloak:8080/realms/pds-realm/protocol/openid-connect/certs
+
+keycloak:
+  auth-server-url: http://keycloak:8080
+  realm: pds-realm
+  resource: pds-client
+  ssl-required: external
+  use-resource-role-mappings: true
+  bearer-only: true
+  cors: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  level:
+    root: INFO
+    com.pds: DEBUG
+    org.springframework.security: DEBUG
