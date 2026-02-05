@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: pds-project
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: PDS E-Health Management System Project
+
+  sourceRepos:
+    - https://github.com/${GITHUB_USERNAME}/pds-k8s-gitops.git
+    - https://github.com/${GITHUB_USERNAME}/pds-complete-project.git
+
+  destinations:
+    - namespace: pds
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: networking.k8s.io
+      kind: IngressClass
+
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: '*'
+    - group: apps
+      kind: '*'
+    - group: networking.k8s.io
+      kind: '*'
+
+  roles:
+    - name: admin
+      description: Admin role for PDS project
+      policies:
+        - p, proj:pds-project:admin, applications, *, pds-project/*, allow
+        - p, proj:pds-project:admin, repositories, *, pds-project/*, allow
+      groups:
+        - admin

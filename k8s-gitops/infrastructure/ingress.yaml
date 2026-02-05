@@ -1,0 +1,75 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pds-ingress
+  namespace: pds
+  labels:
+    app.kubernetes.io/name: pds-ingress
+    app.kubernetes.io/part-of: pds-ehealth
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: pds-ehealth.duckdns.org
+      http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8082
+          - path: /api/clinic
+            pathType: Prefix
+            backend:
+              service:
+                name: clinic-service
+                port:
+                  number: 8083
+          - path: /api/medical
+            pathType: Prefix
+            backend:
+              service:
+                name: medical-service
+                port:
+                  number: 8084
+          - path: /api/consultation
+            pathType: Prefix
+            backend:
+              service:
+                name: consultation-service
+                port:
+                  number: 8085
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway-service
+                port:
+                  number: 8081
+    - host: keycloak.pds-ehealth.duckdns.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak
+                port:
+                  number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: nginx
+  labels:
+    app.kubernetes.io/name: nginx-ingress
+spec:
+  controller: k8s.io/ingress-nginx
